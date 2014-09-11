@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,6 +18,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -116,6 +118,8 @@ public class AndroidShare extends Dialog implements AdapterView.OnItemClickListe
 				"com.sina.weibo.EditActivity", "com.sina.weibo"));
 		this.mListData.add(new ShareItem("腾讯微博", R.drawable.logo_tencentweibo,
 				"com.tencent.WBlog.intentproxy.TencentWeiboIntent","com.tencent.WBlog"));
+		this.mListData.add(new ShareItem("其他", R.drawable.logo_other,
+				"",""));
 
 		this.mLayout = new LinearLayout(context);
 		this.mLayout.setOrientation(1);
@@ -196,8 +200,10 @@ public class AndroidShare extends Dialog implements AdapterView.OnItemClickListe
 	public int getScreenOrientation() {
 		int landscape = 0;
 		int portrait = 1;
-		int width = getWindow().getWindowManager().getDefaultDisplay().getWidth();
-		int height = getWindow().getWindowManager().getDefaultDisplay().getHeight();
+		Point pt = new Point();
+		getWindow().getWindowManager().getDefaultDisplay().getSize(pt);
+		int width = pt.x;
+		int height = pt.y;
 		return width > height ? portrait : landscape;
 	}
 
@@ -208,7 +214,7 @@ public class AndroidShare extends Dialog implements AdapterView.OnItemClickListe
 
 	private void shareMsg(Context context, String msgTitle, String msgText,
 			String imgPath, ShareItem share) {
-		if (!isAvilible(getContext(), share.packageName)) {
+		if (!share.packageName.isEmpty() && !isAvilible(getContext(), share.packageName)) {
 			Toast.makeText(getContext(), "请先安装" + share.title, Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -220,16 +226,20 @@ public class AndroidShare extends Dialog implements AdapterView.OnItemClickListe
 			File f = new File(imgPath);
 			if ((f != null) && (f.exists()) && (f.isFile())) {
 				intent.setType("image/png");
-				Uri u = Uri.fromFile(f);
-				intent.putExtra("android.intent.extra.STREAM", u);
+				intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
 			}
 		}
 
-		intent.putExtra("android.intent.extra.SUBJECT", msgTitle);
-		intent.putExtra("android.intent.extra.TEXT", msgText);
+		intent.putExtra(Intent.EXTRA_SUBJECT, msgTitle);
+		intent.putExtra(Intent.EXTRA_TEXT, msgText);
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		intent.setComponent(new ComponentName(share.packageName,share.activityName));
-		context.startActivity(intent);
+		if(!share.packageName.isEmpty()) {
+			intent.setComponent(new ComponentName(share.packageName,share.activityName));
+			context.startActivity(intent);
+		}
+		else {
+			context.startActivity(Intent.createChooser(intent, msgTitle));
+		}
 	}
 
 	private File getFileCache() {
