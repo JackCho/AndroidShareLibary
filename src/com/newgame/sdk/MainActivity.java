@@ -16,12 +16,11 @@ public class MainActivity extends Activity {
 
 		findViewById(R.id.button1).setOnClickListener(new OnClickListener() {
 
-			@Override
 			public void onClick(View v) {
 				AndroidShare as = new AndroidShare(
 						MainActivity.this,
 						"哈哈---超方便的分享！！！来自allen",
-						"http://www.fjsen.com/images/attachement/jpg/site2/20100701/001aa02d373c0d96c27324.jpg");
+						"http://img6.cache.netease.com/cnews/news2012/img/logo_news.png");
 				as.show();
 			}
 		});
